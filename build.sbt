@@ -2,7 +2,7 @@ lazy val uppex = project.in(file("."))
   .settings(
     name := "uppex",
     version := "0.1.1",
-    scalaVersion := "3.0.2", //"2.13.6",
+    scalaVersion := "3.2.0", //"2.13.6",
     scalacOptions += "-new-syntax",
     assembly / mainClass := Some("uppex.Main"),
     assembly / assemblyJarName := "uppex.jar",

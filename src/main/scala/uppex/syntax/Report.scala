@@ -1,5 +1,7 @@
 package uppex.syntax
 
+import uppex.syntax.Report.Result.Constrain
+
 import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
@@ -9,12 +11,19 @@ class Report(val name:String, val timeout:Int = 30) {
   import Report.Result
 
   var products: List[(String,List[Result])] = Nil
+  var images: List[(String, String)] = Nil
 
-  def addProduct(n:String): Unit = products ::= (n->Nil)
+  def addProduct(n:String): Unit =
+    products ::= (n->Nil)
+    images ::= (n, "")
 
   def addOk(msg:String): Unit = products match
     case (p,l)::rest => products = ((p,Result.OK(msg)::l)::rest)
     case _ => products = (("",Result.OK(msg)::Nil)::Nil)
+
+  def addConstrain(msg: String): Unit = products match
+    case (p, l) :: rest => products = ((p, Result.Constrain(msg) :: l) :: rest)
+    case _ => products = (("", Result.Constrain(msg) :: Nil) :: Nil)
 
   def addFail(msg:String): Unit = products match
     case (p,l)::rest => products = ((p,Result.Fail(msg)::l)::rest)
@@ -24,6 +33,12 @@ class Report(val name:String, val timeout:Int = 30) {
        : Unit = products match
     case (p,l)::rest => products = ((p,Result.TO(missing)::l)::rest)
     case _ => products = (("",Result.TO(missing)::Nil)::Nil)
+
+  def addImage(localPath: String): Unit = images match
+    case (p,"")::rest => images = ((p,localPath)::rest)
+    case (p,_)::rest => images = ((p,localPath)::rest)
+    case _ => images = (("",localPath)::Nil)
+    //images ::= (localPath -> altText)
 
   def writeFile(fileName:String): Unit =
     //println(s"My report: $products")
@@ -35,9 +50,41 @@ class Report(val name:String, val timeout:Int = 30) {
 object Report {
   enum Result {
     case OK(msg:String)
+    case Constrain(msg:String)
     case Fail(msg:String)
     case TO(missing:List[String])
   }
+
+  /////////////////////////
+  // grouped by images //
+  /////////////////////////
+
+  def printProductsImi(rep: Report): String =
+    (for (prod, res) <- rep.images.sortWith(_._1 < _._1) yield
+      s"<h3>$prod</h3>\n<ul>${printImagesNew(res)}</ul>").mkString("\n\n")
+
+  def printImagesNew(image: String): String =
+    if image.isEmpty then ""
+    else image.reverse.map{ case localpath =>
+      s"""<div class="report-image">
+         |  <img src="file:///$localpath" style="max-width:100%; height:auto; display: block; margin: 10px auto;" />
+         |</div>""".stripMargin
+    }.mkString("\n")
+
+  def printImages(rep: Report): String =
+    if rep.images.isEmpty then ""
+    else rep.images.reverse.map { case (localPath, alt) =>
+      if (alt.nonEmpty) then
+        s"""<div class="report-image">
+           |  <h3>$localPath</h3>\n
+           |  <img src="images2/${alt.replace("/","\\").split("\\\\").last}" alt="$localPath" style="max-width:100%; height:auto; display: block; margin: 10px auto;" />
+           |</div>""".stripMargin
+      else {
+        s"""<div class="report-image">
+           |  <h3>$localPath</h3>\n
+           |</div>""".stripMargin
+      }
+    }.mkString("\n")
 
   /////////////////////////
   // grouped by products //
@@ -50,6 +97,7 @@ object Report {
     (for (r<-res.reverse) yield r match {
       case Result.OK(msg) => s"   <li class=\"ok\"> $msg </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> $msg </li>"
+      case Result.Constrain(msg) => s"   <li class=\"constrain\"> $msg </li>"
 //      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing ${miss.size} properties. Failed on property: \"${miss.head}\"</li>"
       case Result.TO(miss) => s"   <li class=\"timeout\"> Error or time-out after ${timeout}s. Missing: ${miss.map(x=>s"<li>$x</li>").mkString("<ul>","\n","</ul>")}</li>"
     }).mkString("\n")
@@ -63,12 +111,36 @@ object Report {
     var timeOuts = List[(String,Result.TO)]() // prod -> timeout
     var miss = Map[String,Set[String]]() // req -> prod*
     var reallyTimeOuts = Set[String]() // set of products that timed out while analysing some product
+    val regexWithApprox = "(.*)with approximation(.*)".r
     for (prod,res) <- rep.products; r<-res do
       r match
-        case Result.OK(msg)   => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
+        case Result.OK(msg)   =>
+          val (newMsg, newProd) = msg match
+            case regexWithApprox(before, after) =>
+              (before.trim, s"$prod with approximation$after")
+            case _ => (msg, prod)
+          //reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
+          reqs += newMsg -> ((newProd -> r) :: reqs.getOrElse(newMsg, Nil))
+
+        //case Result.Constrain(msg)   => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
+        case Result.Constrain(msg) =>
+          val (newMsg, newProd) = if (msg.contains("for the constraint") && (msg.contains("with approximation") || !msg.contains("with approximation"))) then
+            val parts = msg.split("'", 3)
+            (parts(1).trim, s"$prod ${parts(2)}")
+          else (msg, prod)
+          reqs += newMsg -> ((newProd -> r) :: reqs.getOrElse(newMsg, Nil))
+
         case Result.Fail(msg) if msg.startsWith("(Aborted) ") =>
                                  reqs += msg.drop(10)->( (s"(Aborted) $prod"->r) :: reqs.getOrElse(msg, Nil ))
-        case Result.Fail(msg) => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
+
+        case Result.Fail(msg) =>
+          val (newMsg, newProd) = msg match
+            case regexWithApprox(before, after) =>
+              (before.trim, s"$prod with approximation$after")
+            case _ => (msg, prod)
+          //reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
+          reqs += newMsg -> ((newProd -> r) :: reqs.getOrElse(newMsg, Nil))
+
         case to: Result.TO =>
           timeOuts ::= (prod->to)
           for prop <- to.missing.tail do miss += prop -> (miss.getOrElse(prop,Set())+prod)
@@ -100,6 +172,7 @@ object Report {
     // 1. OK and Fails (TO should not occur here)
     (for r<-res.reverse yield r._2 match
       case Result.OK(msg) => s"   <li class=\"ok\"> ${r._1} </li>"
+      case Result.Constrain(msg) => s"   <li class=\"constrain\"> ${r._1} </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> ${r._1} </li>"
       case Result.TO(missing) => "" // s"   <li class=\"timeout\"> Missing ${missing.size-1} other property(ies). </li>"
     ).mkString("\n") +
@@ -123,7 +196,9 @@ object Report {
       "<h1> Grouped by Requirement </h1>"+
         printReqs(rep) +
         "<hr><h1> Grouped by Product </h1>"+
-        printProducts(rep))
+        printProducts(rep) +
+      "<hr><h1> Automata Products </h1>" +
+        printImages(rep))
 
   def getHtml(name: String, core: String): String =
     s"""
@@ -140,6 +215,7 @@ object Report {
        |</head>
        |
        |<body>
+       |
        |
        |<style type="text/css">
        |  @import url("https://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700");
@@ -288,6 +364,10 @@ object Report {
        |
        |li.ok {
        |  list-style-type: '✅';
+       |  padding-inline-start: 1ch;
+       |}
+       |li.constrain {
+       |  list-style-type: '🛠️';
        |  padding-inline-start: 1ch;
        |}
        |li.fail {
@@ -485,3 +565,6 @@ object Report {
        |</html>
        |""".stripMargin
 }
+
+
+

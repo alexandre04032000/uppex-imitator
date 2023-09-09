@@ -1,18 +1,20 @@
 package uppex.semantics
 
+import uppex.semantics.GenModel.{AnnotationBl, Block, Content, NamedBl, XmlElm}
+
 import scala.io.Source
 
 object Uppaal:
-  sealed trait Block
+  //sealed trait Block
 
-  case class Content(c:String) extends Block
-  sealed abstract class NamedBl(val name:String,val oldLines:Lines,val newLines:Lines) extends Block:
-    def prettyName: String = this match
-      case AnnotationBl(n,_,_) => s"@$n"
-      case XmlElm(n,_,_) => s"<$n>"
+  //case class Content(c:String) extends Block
+  //sealed abstract class NamedBl(val name:String,val oldLines:Lines,val newLines:Lines) extends Block:
+    //def prettyName: String = this match
+      //case AnnotationBl(n,_,_) => s"@$n"
+      //case XmlElm(n,_,_) => s"<$n>"
 
-  case class AnnotationBl(n:String, oldL:Lines, newL:Lines) extends NamedBl(n,oldL,newL)
-  case class XmlElm(n:String, oldL:Lines, newL:Lines)       extends NamedBl(n,oldL,newL)
+  //case class AnnotationBl(n:String, oldL:Lines, newL:Lines) extends NamedBl(n,oldL,newL)
+  //case class XmlElm(n:String, oldL:Lines, newL:Lines)       extends NamedBl(n,oldL,newL)
 
   /**
    * A Uppaal model is seen as a sequence of either
@@ -21,14 +23,28 @@ object Uppaal:
    *  - a modified XML element: a sequence of lines inside an XML element with a given tag name.
    * @param blocks
    */
-  case class Model(blocks:List[Block]):
-    override def toString: String =
-      (for b<-blocks yield s" | $b").mkString("\n")
+  case class Model(bs:List[Block]) extends GenModel(bs):
+    def buildNew: String =
+      (for b <- bs yield build(b, true)).mkString("\n")
+
+    /** Builds the text of a new Uppaal file, using the original version. */
+    def buildOld: String =
+      (for b <- bs yield build(b, false)).mkString("\n")
+
+    private def build(b: Block, isNew: Boolean): String = b match
+      case Content(c) => c
+      case AnnotationBl(n, _, newTxt) if isNew => s"// @${n}\n${newTxt.mkString("\n")}"
+      case AnnotationBl(n, oldTxt, _) => s"// @${n}\n${oldTxt.mkString("\n")}"
+      case XmlElm(n, _, newTxt) if isNew => s"<$n>\n${newTxt.mkString("\n")}\n</$n>"
+      case XmlElm(n, oldTxt, _) => s"<$n>\n${oldTxt.mkString("\n")}\n</$n>"
+
+    val extension: String =
+      ".xlm"
 
 
   //////////// Auxiliar functions ////////////
 
-  private type Lines = List[String]
+  //private type Lines = List[String]
 
   /** Collect set of named blocks (annotation blocks or XML elements) that are modified, after trimming every line. */
   def getDiff(m:Model): List[NamedBl] =
@@ -89,6 +105,9 @@ object Uppaal:
     if lst.isEmpty then List("| ") else
        lst.map(x => s"| ${x._1}")
 
+
+  /*
+
   /** Builds the text of a new Uppaal file, using the updated version. */
   def buildNew(m:Model): String =
     (for b<-m.blocks yield build(b,true)).mkString("\n")
@@ -103,6 +122,8 @@ object Uppaal:
     case AnnotationBl(n,oldTxt,_)          => s"// @${n}\n${oldTxt.mkString("\n")}"
     case XmlElm(n,_,newTxt) if isNew => s"<$n>\n${newTxt.mkString("\n")}\n</$n>"
     case XmlElm(n,oldTxt,_)          => s"<$n>\n${oldTxt.mkString("\n")}\n</$n>"
+
+   */
 
 
 

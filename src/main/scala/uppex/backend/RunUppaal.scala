@@ -17,10 +17,11 @@ object RunUppaal:
     println(s"---Verifying '$prod'---") //Running: verifyta ${file.getAbsolutePath}")
     rep.addProduct(prod)
     val pw = new PrintWriter(file)
-    pw.write(Uppaal.buildNew(model))
+    pw.write(model.buildNew)
     pw.close()
     //      val reply = s"timeout 5 verifyta ${file.getAbsolutePath}".!!
     var replies = LazyList[String]()
+    //Uppaal 
     try
       replies =
         if timeout<=0

@@ -44,6 +44,43 @@ object Annotations:
       varPattern.replaceAllIn(pattern, x =>
         findAttr(if x.group(1)==null then x.group(2) else x.group(1)).getOrElse(""))
 
+    def updateField1IfField0Equals(newValue: String, campo: String): Annotation = {
+      val updatedAttrs = attrs.map { case (key, (order, line)) =>
+        if (line.get(0).contains(campo)) then
+          // Atualiza o campo 1 se a condição for satisfeita
+          val updatedLine = line.updated(1, newValue)
+          key -> (order, updatedLine)
+        else {
+          // Mantém a linha inalterada
+          key -> (order, line)
+        }
+      }
+      // Retorna uma nova instância de Annotation com os attrs atualizados
+      copy(attrs = updatedAttrs)
+    }
+
+    def updateField1IfField0EqualsFromTuples(input: List[(String, String)]): Annotation = {
+      val updatedAttrs = attrs.map { case (key, (order, line)) =>
+        // Itera sobre a lista de tuplos (newValue, campo)
+        val updatedLine = input.foldLeft(line) { (currentLine, tuple) =>
+          val (campo, newValue) = tuple
+          // Verifica se o campo 0 contém o valor do campo
+          if (currentLine.get(0).contains(campo)) then
+            // Atualiza o campo 1 com o novo valor
+            currentLine.updated(1, newValue)
+          else {
+            // Se não corresponder, retorna a linha original
+            currentLine
+          }
+        }
+
+        key -> (order, updatedLine)
+      }
+
+      // Retorna uma nova Annotation com os atributos atualizados
+      Annotation(pattern, header, updatedAttrs)
+    }
+
     /** Generates code from the table, applying the pattern all lines. */
     def instantiateAll: List[String] =
       attrs.values.toList.sorted.map(x=>instantiatePattern(x._2))

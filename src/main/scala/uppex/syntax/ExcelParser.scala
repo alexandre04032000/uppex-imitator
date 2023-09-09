@@ -92,7 +92,7 @@ object ExcelParser {
 
     /** Gets a cell from the row, and pre-processes it before being sent to the annotations */
     def getRowCell(r: Row, i: Int)(using sheet:String): String =
-      fix(evalProd(feats, evalString(r.getCell(i))))
+      fix(evalProd(feats, evalString(r.getCell(i)).toString))
 
     //    for sheet <- wb.asScala.toSet do
 //      val s = sheet.getSheetName
@@ -106,7 +106,7 @@ object ExcelParser {
       //val fos = new java.io.FileOutputStream(new java.io.File("output.xlsx"))
       //wb.write(fos)
       ///
-      val patt = evalString(sheet.getRow(0).getCell(0))// position 1.1
+      val patt = evalString(sheet.getRow(0).getCell(0)).toString// position 1.1
       val header: List[String] = sheet.getRow(1).asScala.map(evalString).toList // row 2
       val size = header.size
       val featIdx = header.indexOf("Features") // -1 if not found
@@ -222,7 +222,7 @@ object ExcelParser {
 //            if evalString(cell) != "" do
            val x = cell.getColumnIndex
            val y = cell.getRowIndex
-           val cellVal = evalString(cell)
+           val cellVal = evalString(cell).toString
            if x>last.size then
              sys.error(s"Feature $cellVal at ${show(x->y)} without a parent.")
            if fs contains cellVal then

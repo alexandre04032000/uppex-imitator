@@ -2,7 +2,7 @@
 
 # This script,:
 # 1. reads the properties in `$NAME.xlsx` and applies them to `$NAME.xml`
-# 2. opens Uppaal with file named `$NAME.xml`
+# 2. opens Imitator with file named `$NAME.xml`
 
 # Build first the uppex.jar file, e.g., with "sbt assembly" at the project level.
 

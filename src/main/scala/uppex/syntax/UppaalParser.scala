@@ -1,7 +1,9 @@
 package uppex.syntax
 
-import uppex.semantics.{Annotations, Configurations}
-import uppex.semantics.Uppaal.{AnnotationBl, Block, Content, Model, XmlElm}
+import uppex.semantics.{Annotations, Configurations, GenModel}
+import uppex.semantics.GenModel.{AnnotationBl, Block, Content, XmlElm}
+import uppex.semantics.Uppaal.Model
+
 
 import scala.io.Source
 import scala.util.matching.Regex
