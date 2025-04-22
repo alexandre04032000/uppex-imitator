@@ -1,0 +1,70 @@
+var
+
+session, t : clock;
+
+(*immutable parameters*)
+nails : discrete;	
+b = True : bool;
+
+(*@Limits*)
+sessionTime = 100
+: constant;
+totalNails = 0
+: constant;
+countNails = True
+: bool;
+reactTime = 20
+: constant;
+infiniteNails = True
+: bool;
+
+(*system*)
+automaton Worker
+
+synclabs: rest, hit, newNail, Work;
+
+loc Rest: 
+  invariant session <= sessionTime - reactTime
+  when session >= 0 sync Work do {t := 0} goto Work;
+
+loc Work: 
+  invariant session <= sessionTime && t <= reactTime
+  when t >= reactTime sync newNail do {t := 0} goto Work;
+  when t >= reactTime - 5 sync hit do {t := 0} goto Work;
+  when session >= sessionTime sync rest do {session := 0} goto Rest;
+
+end
+
+automaton Hammer
+
+synclabs: hit, newNail;
+
+loc NailUp: 
+  invariant True
+  when nails < totalNails sync hit goto NailHalf;
+
+loc NailHalf: 
+  invariant True
+  when nails < totalNails sync hit do {nails := nails + 1} goto NailDone;
+
+loc NailDone: 
+  invariant nails <= totalNails
+  when nails < totalNails sync newNail goto NailUp;
+
+end
+
+(*system_enc*)
+init := 
+  & loc[Worker] = Rest
+  & loc[Hammer] = NailUp
+  & session = 0
+  & t = 0
+  & nails = 0
+(*@System_enc*)
+  & sessionTime > 0
+  & reactTime > 0
+  & totalNails > 0
+  
+;
+
+end

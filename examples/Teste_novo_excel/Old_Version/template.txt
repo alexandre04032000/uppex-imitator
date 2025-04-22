@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Código Atualizado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .code-section {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .code {
+            font-family: 'Courier New', Courier, monospace;
+            color: #d6336c;
+        }
+        .result-section {
+            background-color: #e7f3e7;
+            border: 1px solid #b2d8b2;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .result {
+            color: #2d6a2d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exemplo de Código e Resultados</h1>
+
+        <div class="code-section">
+            <h2>Código:</h2>
+            <pre class="code">
+Substituir Aqui!
+            </pre>
+        </div>
+    </div>
+</body>
+</html>

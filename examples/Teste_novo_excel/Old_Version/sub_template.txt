@@ -1,0 +1,10 @@
+        <input type="radio" id="sub_here" name="tab" class="tab" checked>
+        <label for="sub_here" class="tab-label">another_sub</label>
+        <div class="tab-content">
+            <h2>another_sub:</h2>
+            <pre class="code">
+Substituir Aqui!
+            </pre>
+        </div>
+
+     
