@@ -164,6 +164,30 @@ For example, using the table below and considering the configuration table above
   </tbody>
 </table>
 
+## Imitator Extension
+
+Uppex includes an extension to support models intended for the [IMITATOR](https://www.imitator.fr/files/IMITATOR-user-manual.pdf) tool, enabling automatic transformation of annotated models into valid input files for **parametric timed verification**.
+
+### Overview
+
+Just like with UPPAAL, Uppex can process annotations in `.imi` model files based on rules defined in a companion Excel spreadsheet. These annotations,which, unlike in Uppaal are identified using the format `(*Name*)`, allow users to systematically generate variations of IMITATOR models using **templated substitutions**.
+
+This extension enables:
+
+- Replacing specific blocks within `.imi` files, such as parameter declarations, locations, or invariants.
+- Generating multiple model variants based on selected feature configurations.
+- Producing ready-to-use `.imi` and `.imiprop`(for properties) files for parametric analysis in IMITATOR.
+
+It also supports a new type of boolean expressions involving features:
+
+| Expression Type          | Old Version              | New Version                              |
+|--------------------------|--------------------------|-------------------------------------------|
+| Simple Boolean Expressions | `Lazy && !Overworker`   | `Lazy && !Overworker`                    |
+| Comparison with Strings  | Not Supported            | `Count == ?`                             |
+| Comparison with Numbers  | Not Supported            | `Slow > 0.5`                             |
+| Combination of Types     | Not Supported            | `(Count == ?) && (Slow < 10)`           |
+
+
 
 ## Download or build the (fat) jar
 
@@ -238,3 +262,7 @@ A more complete variation of this example can be found in folder [examples/hamme
 
 _The ECSEL JU and the European Commission are not responsible for the content on this website or any use that may be made of the information it contains._
  -->
+
+### Imitator
+
+An example that illustrates the capabilities of Imitator can be found in the folder [examples/Test-Imitator](https://github.com/alexandre04032000/uppex-imitator/tree/b638950c9004c0fa47c24dd51c80ee260a9e46b7/examples/Teste_novo_excel) 
