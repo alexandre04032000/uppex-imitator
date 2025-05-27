@@ -1,6 +1,7 @@
 # Uppex
 
 Allows extending an UPPAAL/Imitator model with __annotated blocks__ and __XML blocks__, e.g.:
+In Case of a UPPAAL Model:
 ```xml
 <nta>
     <declaration>
@@ -18,6 +19,30 @@ Allows extending an UPPAAL/Imitator model with __annotated blocks__ and __XML bl
     ...
 </nta>
 ```
+In Case of a Imitator Model:
+
+```
+var
+
+session, t : clock;
+nails : discrete;	
+b = True : bool;
+
+(*@Limits*)
+sessionTime = 100
+: constant;
+totalNails = 0
+: constant;
+countNails = True
+: bool;
+reactTime = 20
+: constant;
+infiniteNails = True
+: bool;
+
+...
+```
+
 And reads a companion MS Excel file (with the same base name) with tables that describe how to adapt the block following an annotation command, until the next empty line.
 For example, with the expression and table below in a sheet called `@myAnnotation`, the values 1 and 2 will become 10 and 20.
 
