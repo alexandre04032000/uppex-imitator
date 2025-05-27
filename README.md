@@ -1,6 +1,7 @@
 # Uppex
 
 Allows extending an UPPAAL/Imitator model with __annotated blocks__ and __XML blocks__, e.g.:
+
 In Case of a UPPAAL Model:
 ```xml
 <nta>
@@ -21,7 +22,7 @@ In Case of a UPPAAL Model:
 ```
 In Case of a Imitator Model:
 
-```
+```pascal
 var
 
 session, t : clock;
