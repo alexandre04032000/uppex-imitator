@@ -1,287 +1,190 @@
 # Uppex
 
-Allows extending an UPPAAL/Imitator model with __annotated blocks__ and __XML blocks__, e.g.:
+# Uppex: Parametric Generation for UPPAAL and IMITATOR Models
 
-In Case of a UPPAAL Model:
+**Uppex** is a tool that automates the generation of UPPAAL (`.xml`) and IMITATOR (`.imi`) model variants using rules and configurations defined in a companion Excel file (`.xlsx`). This enables scalable and systematic parametric analysis through annotations and feature-based configurations.
+
+---
+
+## 📘 What Are UPPAAL and IMITATOR?
+
+### 🕒 UPPAAL
+- A tool for modeling, simulation, and formal verification of **real-time systems**.
+- Uses **timed automata** to model concurrent system behavior.
+- Allows verification of temporal properties such as:
+  - Absence of *deadlocks*
+  - Deadline satisfaction
+  - State safety and reachability
+- Input file format: `.xml`
+
+### ⏱ IMITATOR
+- A tool for **parametric timed verification**.
+- Supports analysis with **symbolic timing parameters**.
+- Enables parameter synthesis, robustness checking, and more.
+- Input files: `.imi` (model), `.imiprop` (properties)
+
+---
+
+## ✨ How Uppex Works
+
+Uppex reads:
+- A model file (`.xml` or `.imi`)
+- An Excel file (`.xlsx`) with the same base name
+
+The Excel file contains instructions to:
+- Modify annotated sections
+- Inject or replace values
+- Generate multiple configurations
+
+### 🧩 Example: UPPAAL Annotation
+
 ```xml
-<nta>
-    <declaration>
-        ...
-        // @myAnnotation
-        const int v1 = 1;
-        const int v2 = 2;
-        
-        ...
-    </declaration>
-    ...
-    <queries>
-        ...
-    </queries>
-    ...
-</nta>
+// @myAnnotation
+const int v1 = 1;
+const int v2 = 2;
 ```
-In Case of a Imitator Model:
+
+### 🧩 Example: IMITATOR Annotation
 
 ```pascal
-var
-
-session, t : clock;
-nails : discrete;	
-b = True : bool;
-
 (*@Limits*)
-sessionTime = 100
-: constant;
-totalNails = 0
-: constant;
-countNails = True
-: bool;
-reactTime = 20
-: constant;
-infiniteNails = True
-: bool;
-
-...
+sessionTime = 100 : constant;
+reactTime = 20 : constant;
 ```
 
-And reads a companion MS Excel file (with the same base name) with tables that describe how to adapt the block following an annotation command, until the next empty line.
-For example, with the expression and table below in a sheet called `@myAnnotation`, the values 1 and 2 will become 10 and 20.
+---
 
-<table>
-  <tbody>
-    <tr>
-      <td colspan="3">
-          <code class="language-plaintext highlighter-rouge">const $type $var = $number;</code>
-      </td>
-    </tr>
-<!--   </tbody>
-  <thead> -->
-    <tr>
-      <th style="font-weight: 600;text-align: center;">var</th>
-      <th style="font-weight: 600;text-align: center;">type</th>
-      <th style="font-weight: 600;text-align: center;">num</th>
-    </tr>
-<!--   </thead>
-  <tbody> -->
-    <tr>
-      <td>v1</td>
-      <td>int</td>
-      <td>10</td>
-    </tr>
-    <tr>
-      <td>v2</td>
-      <td>int</td>
-      <td>20</td>
-    </tr>
-  </tbody>
-</table>
+## 📊 Excel Sheets Structure
 
-<!--  `const int $var = $number;`
+### Annotation Sheet `@myAnnotation`
 
-| var | num |
-| --- | --- |
-| v1 | 10 |
-| v2 | 20 |
- -->
+```plaintext
+const $type $var = $number;
+```
 
-It is also possible to replace the content of the `<queries>` block by introducing a sheet named `<queries>` to our spreadsheet with a table like the one below:
+| var | type | num |
+|-----|------|-----|
+| v1  | int  | 10  |
+| v2  | int  | 20  |
 
-<table>
-  <tbody>
-    <tr>
-      <td colspan="3">
-          <code class="language-plaintext highlighter-rouge">&lt;query&gt; &lt;formula&gt;$Formula&lt;/formula&gt; &lt;comment&gt;$Comment&lt;/comment&gt; &lt;/query&gt;</code>
-      </td>
-    </tr>
-<!--   </tbody>
-  <thead> -->
-    <tr>
-      <th style="font-weight: 600;text-align: center;">Formula</th>
-      <th style="font-weight: 600;text-align: center;">Comment</th>
-    </tr>
-<!--   </thead>
-  <tbody> -->
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">A[]!deadlock</code></td>
-      <td>No deadlocks</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">A[] W.Idle</code></td>
-      <td>The worker is always Idle</td>
-    </tr>
-  </tbody>
-</table>
+### Replacing `<queries>` Block in UPPAAL
 
-<!-- 
-`<query> <formula>$Formula</formula> <comment>$Comment</comment> </query>`
+Sheet named `<queries>` will override the XML `<queries>` block.
 
-|Formula | Comment|
-| ------ | -------|
-|`A[]!deadlock` | No deadlocks|
-|`A[] W.Idle` | The worker is always Idle|
- -->
-This concrete table will replace the content of the `<queries>` block by two `<query>` blocks containing the corresponding formulas and comments from the table.
+```xml
+<query>
+  <formula>$Formula</formula>
+  <comment>$Comment</comment>
+</query>
+```
 
+| Formula         | Comment                |
+|----------------|------------------------|
+| `A[]!deadlock` | No deadlocks           |
+| `A[] W.Idle`   | The worker is always Idle |
 
-## Supporting multiple configurations
+---
 
-Often we want to experiment with different combinations of values and queries.
+## ⚙️ Supporting Multiple Configurations
 
-Uppex supports the specification of a list of configurations, each producing variations of the values and XML blocks, following principles from Software Product Line Engineering.
-Uppex generates, for each of the provided configurations, a different instance of the original UPPAAL model and verifies all properties of all instances.
-We will first see how to define configuration by selecting desired "features", and then how to enrich the annotations with these "features".
+### Configuration Sheet `@Configurations`
 
-### Specifying configurations
+| Configuration | Feature1 | Feature2 |
+|---------------|----------|----------|
+| Main          |          |          |
+| Conf2         | x        |          |
+| Conf3         |          | x        |
 
-A special sheet named `@Configurations` lists and specifies the configuration in a table similar to the one below:
+Each configuration can enable one or more *features* which will conditionally apply certain annotation rules.
 
-|Configuration | _Feature1_ | _Feature2_ | ...  |
-| :----------- | :------: | :-------: | ---- |
-| _Main_ |  |  |  |    
-| _Conf2_ | x | | |
-| _Conf3_ |  | x | |
+### Feature-Based Rules in Annotations
 
-The names below __Configuration__ identify the set of desired configurations, and every non-empty cell at the right of these selects the feature name at the top of the corresponding column.
+| var | type | num   | Features  |
+|-----|------|--------|-----------|
+| v1  | int  | 10000  | Feature1  |
+| v1  | int  | 10     | Feature2  |
+| v2  | int  | 20     |           |
 
-In this example we have 3 configurations: _Main_, _Conf2_, and _Conf3_; configuration _Conf2_ selects _Feature1_, _Conf3_ selects _Feature2_, and _Main_ does not select any feature.
-Each feature selection in a configuration will modify the annotations, explained below, yielding a different instance of the UPPAAL model.
+> If multiple rules match the same variable, the **last applicable one** prevails.
 
-### Enriching annotations with features
+---
 
-Recall that each annotation is described by a table with multiple columns, each with a header identifying a pattern name. A special column named `Features` is used to map entries to boolean expressions over feature names, such as the ones in the configuration table. Empty cells default to `True`. Each line of an annotation table is included only if the boolean expression evaluates to true by assigning the selected features to true. When more than one entry has the same left-most value, the last one prevails. 
+## 🧪 IMITATOR-Specific Features
 
-For example, using the table below and considering the configuration table above, selecting the configuration _Conf3_ would produce our original Uppaal model, but selecting _Conf2_ would instead assign `10000` to `v1`.
+Annotations in IMITATOR models use `(*@Name*)`. Uppex enables:
 
-<table>
-  <tbody>
-    <tr>
-      <td colspan="4">
-          <code class="language-plaintext highlighter-rouge">const $type $var = $number;</code>
-      </td>
-    </tr>
-<!--   </tbody>
-  <thead> -->
-    <tr>
-      <th style="font-weight: 600;text-align: center;">var</th>
-      <th style="font-weight: 600;text-align: center;">type</th>
-      <th style="font-weight: 600;text-align: center;">num</th>
-      <th style="font-weight: 600;text-align: center;">Features</th>
-    </tr>
-<!--   </thead>
-  <tbody> -->
-    <tr>
-      <td>v1</td>
-      <td>int</td>
-      <td>10000</td>
-      <td>Feature1</td>
-    </tr>
-    <tr>
-      <td>v1</td>
-      <td>int</td>
-      <td>10</td>
-      <td>Feature2</td>
-    </tr>
-    <tr>
-      <td>v2</td>
-      <td>int</td>
-      <td>20</td>
-      <td></td>
-    </tr>
-  </tbody>
-</table>
+- Replacing blocks (parameters, invariants, etc.)
+- Creating `.imi` and `.imiprop` files per configuration
+- Advanced feature expressions support:
 
-## Imitator Extension
+| Expression Type           | Example                            |
+|---------------------------|------------------------------------|
+| Boolean logic             | `Lazy && !Overworker`              |
+| String comparison         | `Count == ?`                       |
+| Numeric comparison        | `Slow > 0.5`                       |
+| Mixed expressions         | `(Count == ?) && (Slow < 10)`     |
 
-Uppex includes an extension to support models intended for the [IMITATOR](https://www.imitator.fr/files/IMITATOR-user-manual.pdf) tool, enabling automatic transformation of annotated models into valid input files for **parametric timed verification**.
+---
 
-### Overview
+## 🚀 How to Use
 
-Just like with UPPAAL, Uppex can process annotations in `.imi` model files based on rules defined in a companion Excel spreadsheet. These annotations,which, unlike in Uppaal are identified using the format `(*Name*)`, allow users to systematically generate variations of IMITATOR models using **templated substitutions**.
+### 🛠 Prerequisites
 
-This extension enables:
+- [SBT](https://www.scala-sbt.org) – for building the JAR
+- [Docker](https://www.docker.com) – required at runtime
+- JVM 1.8 or later
+- [UPPAAL](https://uppaal.org) (optional, for property verification)
 
-- Replacing specific blocks within `.imi` files, such as parameter declarations, locations, or invariants.
-- Generating multiple model variants based on selected feature configurations.
-- Producing ready-to-use `.imi` and `.imiprop`(for properties) files for parametric analysis in IMITATOR.
+### 📥 Download or Build
 
-It also supports a new type of boolean expressions involving features:
+**Download** the latest `.jar`:  
+[https://github.com/cister-labs/uppex/releases](https://github.com/cister-labs/uppex/releases)
 
-| Expression Type          | Old Version              | New Version                              |
-|--------------------------|--------------------------|-------------------------------------------|
-| Simple Boolean Expressions | `Lazy && !Overworker`   | `Lazy && !Overworker`                    |
-| Comparison with Strings  | Not Supported            | `Count == ?`                             |
-| Comparison with Numbers  | Not Supported            | `Slow > 0.5`                             |
-| Combination of Types     | Not Supported            | `(Count == ?) && (Slow < 10)`           |
-
-
-
-## Download or build the (fat) jar
-
-Dependencies:
-
- - SBT [(https://www.scala-sbt.org)](https://www.scala-sbt.org) (needed to compile)
- - Docker (Desktop app needed when running the jar - https://www.docker.com)
- - JVM (>=1.8)
- - UPPAAL (optional - https://uppaal.org)
-
-
-### Download
-
-You can download the latest release – the `uppex.jar` file – from https://github.com/cister-labs/uppex/releases.
-
-
-### Compile
-
-Alternatively, use the sbt task to build the self-contained jar-file running at the root:
+**Or build it manually:**
 ```bash
 sbt assembly
 ```
 
-## Run the jar
+### ▶️ Run
 
-The compiled jar-file can be found in `target/scala-3.0.2/uppex.jar`.
-You can copy it to your working folder, with the UPPAAL and Excel files. To list the possible options run in the command line:
-```bash
-java -jar uppex.jar --help
-```
-
-For example, to apply the default configuration in a file `myfile.xlsx` to an UPPAAL model `myfile.xml`, you can run the command:
-
+Apply the default configuration:
 ```bash
 java -jar uppex.jar myfile.xlsx
 ```
 
-The file names of the configuration and UPPAAL files must match.
-You will be presented with a list of changes applied to the `myfile.xml`, this file will be updated, and a copy of the original file will be placed in a `backups` folder, which will be created if it does not exist.
-
-To check all properties using UPPAAL of all configurations, you can run the command:
-
+Run all configurations and verify properties:
 ```bash
 java -jar uppex.jar --runAll myfile.xlsx
 ```
 
-This requires the command `verifyta` to be available in the `PATH`, which can be found in the binaries included by UPPAAL.
-Extra options, such as a timeout value, can be defined here, requiring the command `timeout` to be available in the `PATH`.
-This command will:
+> Requires `verifyta` in your `PATH` (UPPAAL's model checker)  
+> Optional: Use `timeout` command for time-limited runs
 
-- output to the screen the results of verifying each property as they are verified, and
-- produce a "report.html" file compiling all the results in a more readable format.
+---
 
+## 📁 Examples
 
-## Examples
+### ✅ Basic Example (UPPAAL)
+Path: [`examples/simple`](https://github.com/cister-labs/uppex/blob/main/examples/simple)
 
-### Annotations
-You can find a simple example in folder [examples/simple](https://github.com/cister-labs/uppex/blob/main//examples/simple) to illustrate the usage of annotations. 
-It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppex and Uppaal.
-This example includes both __annotation__ and __XML__ blocks; the former are in sheets whose name starts in `@`, and the latter are in sheets whose name is surrounded by angular brackets `<>`.
+- UPPAAL model + Excel annotations
+- Includes both `@` (annotations) and `<queries>` (block replacements)
+- Script: `runuppaal.command`
 
-To run the simple example, first build the fat jar (`sbt assembly`).
-Then, using the command line in the folder of the example, type `sh runuppaal.command`.
+### ⚙️ Advanced Example with Configurations
+Path: [`examples/simple-with-conf`](https://github.com/cister-labs/uppex/blob/main/examples/simple-with-conf)
 
+- Multiple configurations via `@Configurations`
+- Uses feature expressions in annotation tables
 
-### Configurations
+---
 
-A more complete variation of this example can be found in folder [examples/hammer](https://github.com/cister-labs/uppex/blob/main/examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
+## 📚 Resources
+
+- [UPPAAL Official Site](https://uppaal.org)
+- [IMITATOR User Manual](https://www.imitator.fr/files/IMITATOR-user-manual.pdf)
+- [Uppex GitHub Repository](https://github.com/cister-labs/uppex)
+
 
 
 
