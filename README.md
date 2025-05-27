@@ -138,7 +138,7 @@ Annotations in IMITATOR models use `(*@Name*)`. Uppex enables:
 ### 📥 Download or Build
 
 **Download** the latest `.jar`:  
-[https://github.com/cister-labs/uppex/releases](https://github.com/cister-labs/uppex/releases)
+[https://github.com/alexandre04032000/uppex-imitator/releases](https://github.com/alexandre04032000/uppex-imitator/releases)
 
 **Or build it manually:**
 ```bash
@@ -171,11 +171,18 @@ Path: [`examples/simple`](https://github.com/cister-labs/uppex/blob/main/example
 - Includes both `@` (annotations) and `<queries>` (block replacements)
 - Script: `runuppaal.command`
 
-### ⚙️ Advanced Example with Configurations
-Path: [`examples/simple-with-conf`](https://github.com/cister-labs/uppex/blob/main/examples/simple-with-conf)
+### ⚙️ Basic Example (IMITATOR)
+Path: [`examples/Test-Imitator`](https://github.com/alexandre04032000/uppex-imitator/tree/b638950c9004c0fa47c24dd51c80ee260a9e46b7/examples/Teste_novo_excel) 
 
-- Multiple configurations via `@Configurations`
+- Multiple configurations via `*@Configurations*` and `*@System_Enc*`
 - Uses feature expressions in annotation tables
+
+---
+### 🌐 Towards a Better Uppex Interface
+
+Download the setup shell script provided in the link below and create a directory with this file within
+
+Path: [https://github.com/alexandre04032000/uppex-imitator/blob/c9fee8548d51bf9d07f1344c40cbb67c4976e58d/interface.sh](https://github.com/alexandre04032000/uppex-imitator/blob/c9fee8548d51bf9d07f1344c40cbb67c4976e58d/interface.sh)
 
 ---
 
@@ -193,6 +200,3 @@ Path: [`examples/simple-with-conf`](https://github.com/cister-labs/uppex/blob/ma
 _The ECSEL JU and the European Commission are not responsible for the content on this website or any use that may be made of the information it contains._
  -->
 
-### Imitator
-
-An example that illustrates the capabilities of Imitator can be found in the folder [examples/Test-Imitator](https://github.com/alexandre04032000/uppex-imitator/tree/b638950c9004c0fa47c24dd51c80ee260a9e46b7/examples/Teste_novo_excel) 
