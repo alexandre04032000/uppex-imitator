@@ -220,6 +220,7 @@ It also supports a new type of boolean expressions involving features:
 Dependencies:
 
  - SBT [(https://www.scala-sbt.org)](https://www.scala-sbt.org) (needed to compile)
+ - Docker (Desktop app needed when running the jar - https://www.docker.com)
  - JVM (>=1.8)
  - UPPAAL (optional - https://uppaal.org)
 
