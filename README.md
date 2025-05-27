@@ -1,6 +1,6 @@
 # Uppex
 
-Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e.g.:
+Allows extending an UPPAAL/Imitator model with __annotated blocks__ and __XML blocks__, e.g.:
 ```xml
 <nta>
     <declaration>
